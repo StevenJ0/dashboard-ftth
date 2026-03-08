@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = "force-dynamic";
 import { SignJWT } from 'jose';
 import { userService } from '@/lib/prisma/service';
 import bcrypt from 'bcrypt';
