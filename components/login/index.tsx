@@ -351,15 +351,6 @@ const LoginView = () => {
                                 />
                                 <label htmlFor="remember-me" className="ml-2 block text-gray-700">Remember me</label>
                             </div>
-                            <div className="text-sm">
-                                <button 
-                                    type="button" 
-                                    onClick={() => setShowResetModal(true)}
-                                    className="font-medium text-red-600 hover:text-red-500 focus:outline-none"
-                                >
-                                    Forgot password?
-                                </button>
-                            </div>
                         </div>
 
                         <button

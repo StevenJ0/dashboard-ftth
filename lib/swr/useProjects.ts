@@ -26,8 +26,6 @@ export interface ProjectData {
   status_lapangan: string | null;
   status_tomps: string | null;
   progress_percent: number;
-  port_location: string | null;
-  sub_district: string | null;
   project_type: string | null;
   program_name: string | null;
   contract_number: string | null;

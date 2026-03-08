@@ -120,7 +120,13 @@ export async function DELETE(request: Request) {
   try {
     // Safety check: Is used in projects?
     const usageCount = await prisma.projects.count({
-      where: { vendor_code: code },
+      where: {
+        project_items: {
+          some: {
+            vendor_code: code
+          }
+        }
+      }
     });
 
     if (usageCount > 0) {
