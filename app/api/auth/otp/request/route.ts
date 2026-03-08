@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma/prisma'; 
 import { otpService, userService } from '@/lib/prisma/service';
 import { telegramService } from '@/lib/telegram/service';
