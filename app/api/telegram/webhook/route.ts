@@ -1,4 +1,6 @@
   import { NextRequest, NextResponse } from "next/server";
+
+  export const dynamic = "force-dynamic";
   import { prisma } from "@/lib/prisma/prisma";
   import { generateProjectMessage } from "@/lib/telegram/formatter";
 
