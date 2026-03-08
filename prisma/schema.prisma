@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model dim_locations {
+  id            Int             @id @default(autoincrement())
+  sub_district  String?         @db.VarChar(100)
+  port_location String?         @db.VarChar(50)
+  witel_id      Int?
+  dim_witels    dim_witels?     @relation(fields: [witel_id], references: [id], onDelete: Cascade)
+  project_items project_items[]
+}
+
+model dim_plants {
+  plant_code    String          @id @db.VarChar(20)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  project_items project_items[]
+}
+
+model dim_programs {
+  id            Int             @id @default(autoincrement())
+  program_name  String?         @db.VarChar(255)
+  project_items project_items[]
+}
+
+model dim_regionals {
+  id            Int          @id @default(autoincrement())
+  regional_name String       @unique @db.VarChar(50)
+  dim_witels    dim_witels[]
+}
+
+model dim_vendors {
+  vendor_code   String          @id @db.VarChar(50)
+  vendor_name   String?         @db.VarChar(255)
+  project_items project_items[]
+}
+
+model dim_witels {
+  id            Int             @id @default(autoincrement())
+  witel_name    String          @db.VarChar(50)
+  regional_id   Int
+  dim_locations dim_locations[]
+  dim_regionals dim_regionals   @relation(fields: [regional_id], references: [id], onDelete: Cascade)
+}
+
+model otp_logs {
+  id           Int       @id @default(autoincrement())
+  phone_number String?   @db.VarChar
+  otp_code     String?   @db.VarChar
+  expires_at   DateTime? @db.Timestamp(6)
+  is_used      Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  user_id      Int?
+  users        users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+}
+
+model project_items {
+  id                   Int            @id @default(autoincrement())
+  wbs_id               String?        @db.VarChar(50)
+  short_text           String?
+  pr_number            String?        @db.VarChar(50)
+  po_number            String?        @db.VarChar(50)
+  pr_date              DateTime?      @db.Date
+  po_date              DateTime?      @db.Date
+  delivery_date        DateTime?      @db.Date
+  gr_date              DateTime?      @db.Date
+  pr_amount            Decimal?       @db.Decimal(19, 2)
+  po_amount            Decimal?       @db.Decimal(19, 2)
+  gr_amount            Decimal?       @db.Decimal(19, 2)
+  ir_amount            Decimal?       @db.Decimal(19, 2)
+  progress_percent     Float?
+  status_lapangan      String?        @db.VarChar(100)
+  status_tomps_percent String?        @db.VarChar(50)
+  status_tomps_stage   String?        @db.VarChar(100)
+  updated_at           DateTime?      @default(now()) @db.Timestamp(6)
+  location_id          Int?
+  plant_code           String?        @db.VarChar(20)
+  program_id           Int?
+  vendor_code          String?        @db.VarChar(50)
+  dim_locations        dim_locations? @relation(fields: [location_id], references: [id], onUpdate: NoAction, map: "fk_items_location")
+  dim_plants           dim_plants?    @relation(fields: [plant_code], references: [plant_code], onUpdate: NoAction, map: "fk_items_plant")
+  dim_programs         dim_programs?  @relation(fields: [program_id], references: [id], onUpdate: NoAction, map: "fk_items_program")
+  projects             projects?      @relation(fields: [wbs_id], references: [wbs_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_items_project")
+  dim_vendors          dim_vendors?   @relation(fields: [vendor_code], references: [vendor_code], onUpdate: NoAction, map: "fk_items_vendor")
+}
+
+model projects {
+  wbs_id                 String          @id @db.VarChar(50)
+  project_name           String?
+  identification_project String?         @db.VarChar(100)
+  project_type           String?         @db.VarChar(20)
+  contract_number        String?         @db.VarChar(100)
+  contract_date          DateTime?       @db.Date
+  project_items          project_items[]
+}
+
+model users {
+  id            Int        @id @default(autoincrement())
+  full_name     String?    @db.VarChar(100)
+  phone_number  String     @unique @db.VarChar(20)
+  password_hash String     @db.VarChar(255)
+  role          String?    @default("USER") @db.VarChar(20)
+  is_verified   Boolean?   @default(false)
+  created_at    DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?  @default(now()) @db.Timestamp(6)
+  telegram_id   String?    @unique @db.VarChar(50)
+  otp_logs      otp_logs[]
+}

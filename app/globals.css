@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ===========================================
+   GLOBAL CSS - CAPEX Management Dashboard
+   Telkom Indonesia Corporate Identity
+   =========================================== */
+
+:root {
+  /* Telkom Indonesia Brand Colors */
+  --telkom-red: #EE2E24;       /* Primary Brand Color - buttons, active states */
+  --telkom-dark: #231F20;      /* Deep Black - headings, navbar backgrounds */
+  --telkom-blue: #0050AE;      /* Digital Blue - secondary actions, links */
+  --telkom-white: #FFFFFF;     /* Pure White - main background */
+  --telkom-gray: #E6E7E8;      /* Light Gray - borders, dividers */
+  
+  /* Semantic Colors */
+  --background: #F8F9FA;       /* Slightly off-white for page background */
+  --foreground: #231F20;       /* Deep Black for main text */
+  --card-bg: #FFFFFF;          /* White for card backgrounds */
+  --border-color: #E6E7E8;     /* Light Gray for borders */
+  --muted-text: #6B7280;       /* Medium gray for secondary text */
+  
+  /* Accent Colors */
+  --primary: #EE2E24;          /* Telkom Red for primary actions */
+  --primary-light: #FEF2F2;    /* Light red for hover states */
+  --secondary: #0050AE;        /* Digital Blue for secondary elements */
+  
+  /* Force light mode */
+  color-scheme: light;
+}
+
+/* Tailwind v4 theme integration */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-telkom-red: var(--telkom-red);
+  --color-telkom-dark: var(--telkom-dark);
+  --color-telkom-blue: var(--telkom-blue);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Base body styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Geist', Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===========================================
+   UTILITY CLASSES
+   =========================================== */
+
+/* Card surfaces */
+.card {
+  background-color: var(--card-bg);
+}
+
+/* Muted text utility */
+.text-muted {
+  color: var(--muted-text);
+}
+
+/* Telkom branded utilities */
+.text-telkom-red {
+  color: var(--telkom-red);
+}
+
+.bg-telkom-red {
+  background-color: var(--telkom-red);
+}
+
+.text-telkom-blue {
+  color: var(--telkom-blue);
+}
+
+.bg-telkom-blue {
+  background-color: var(--telkom-blue);
+}
+
+.border-telkom-gray {
+  border-color: var(--telkom-gray);
+}
+
+/* ===========================================
+   SCROLLBAR STYLING
+   =========================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--telkom-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9CA3AF;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* ===========================================
+   FOCUS STATES - Telkom Red accent
+   =========================================== */
+
+input:focus,
+select:focus,
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(238, 46, 36, 0.2);
+}
+
