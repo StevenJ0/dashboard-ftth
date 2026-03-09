@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import { userService } from '@/lib/prisma/service';
 import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +19,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // 🚀 INI KUNCINYA: Dynamic Import! 
+    // Prisma baru akan di-load saat ada user login, BUKAN saat Vercel melakukan build.
+    const { userService } = await import('@/lib/prisma/service');
 
     const user = await userService.getByPhone(phoneNumber);
 
