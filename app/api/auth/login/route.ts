@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
-
-export const dynamic = "force-dynamic";
 import { SignJWT } from 'jose';
 import { userService } from '@/lib/prisma/service';
-import bcrypt from 'bcrypt';
-import { JWT_SECRET } from '@/lib/auth/config';
+import bcrypt from 'bcryptjs';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+    const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
     const { phoneNumber, password, rememberMe } = await req.json();
 
     if (!phoneNumber || !password) {
