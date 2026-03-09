@@ -3,7 +3,7 @@ import { userService, otpService, genericDBService } from '@/lib/prisma/service'
 import { telegramService } from '@/lib/telegram/service';
 import bcrypt from 'bcrypt';
 import { SignJWT, jwtVerify } from 'jose';
-import { JWT_SECRET, JWT_RESET_SECRET } from '@/lib/auth/config';
+import { JWT_SECRET } from '@/lib/auth/config';
 
 export const authService = {
   /**
@@ -117,89 +117,5 @@ export const authService = {
         cookieMaxAge: rememberMe ? 7 * 24 * 60 * 60 : undefined, // seconds (7 days) or undefined (session)
         user: { id: user.id, name: user.full_name, role: user.role }
     };
-  },
-
-  /**
-   * Request Reset Password
-   */
-  async requestResetPassword(phoneNumber: string) {
-    const user = await userService.getByPhone(phoneNumber);
-    if (!user) {
-        throw new Error("Nomor tidak terdaftar");
-    }
-
-    if (!user.telegram_id) {
-        throw new Error("Akun belum diverifikasi. Silakan kirim pesan /verify <NomorHP> ke Bot Telegram kami.");
-    }
-
-    // Generate OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Log OTP
-    await otpService.createLog(phoneNumber, otpCode, user.id);
-
-    // Send Telegram Notification
-    const message = `Halo ${user.full_name}, Kode Reset Password Dashboard FTTH Anda adalah: <b>${otpCode}</b>. Berlaku 5 menit. JANGAN BERIKAN KODE INI KE SIAPAPUN.`;
-    const sent = await telegramService.sendTelegramMessage(user.telegram_id, message);
-    
-    if (!sent) {
-        throw new Error("Gagal mengirim OTP via Telegram. Pastikan Anda sudah terhubung dengan bot.");
-    }
-
-    return { success: true, message: 'OTP Reset sent' };
-  },
-
-  /**
-   * Verify Reset OTP
-   */
-  async verifyResetOtp(phoneNumber: string, otpCode: string) {
-    const otpLog = await otpService.findValidLog(phoneNumber, otpCode);
-    if (!otpLog) {
-        throw new Error("Invalid or Expired OTP");
-    }
-    
-    // We do NOT mark used yet? Usually we wait for confirm.
-    // Or we mark used now to prevent reuse?
-    // Safe bet: Mark used now, issue a Reset Token.
-    await otpService.markAsUsed(otpLog.id);
-
-    // User check
-    const userId = otpLog.user_id; // Should exist
-    if (!userId) throw new Error("User not found in OTP log");
-
-    // Generate Reset Token (Short lived)
-    const resetToken = await new SignJWT({ 
-        userId: userId, 
-        type: 'RESET_PASSWORD' 
-    })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('15m') // 15 mins
-    .sign(JWT_RESET_SECRET);
-
-    return { success: true, resetToken };
-  },
-
-  /**
-   * Confirm New Password
-   */
-  async confirmResetPassword(resetToken: string, newPassword: string) {
-    try {
-        const { payload } = await jwtVerify(resetToken, JWT_RESET_SECRET);
-        
-        if (payload.type !== 'RESET_PASSWORD' || !payload.userId) {
-            throw new Error("Invalid Token Type");
-        }
-
-        const userId = payload.userId as number;
-        const passwordHash = await bcrypt.hash(newPassword, 10);
-
-        // Update Password
-        await genericDBService.updateData('users', userId, { password_hash: passwordHash });
-
-        return { success: true, message: "Password berhasil diubah" };
-    } catch (error) {
-        throw new Error("Token Invalid or Expired");
-    }
   }
 };
-
