@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { authService } from '@/services/auth.service';
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const { authService } = await import('@/services/auth.service');
     const result = await authService.registerUser({ fullName, phoneNumber, password });
 
     return NextResponse.json(

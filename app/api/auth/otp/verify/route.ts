@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import { authService } from '@/services/auth.service';
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +12,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // 🚀 KUNCI: Pindahkan import ke DALAM fungsi (Dynamic Import)
+    const { authService } = await import('@/services/auth.service');
 
     // Call Service
     const result = await authService.verifyOtp(phoneNumber, otpCode, rememberMe);
@@ -38,9 +40,7 @@ export async function POST(req: Request) {
     console.error('Error verifying OTP:', error);
     return NextResponse.json(
       { success: false, message: error.message || 'Verification failed' },
-      { status: 400 } // Or 500 depending on error, but mostly 400 for logic issues
+      { status: 400 } 
     );
   }
 }
-
-
