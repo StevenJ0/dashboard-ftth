@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search') || '';
 
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const vendors = await prisma.dim_vendors.findMany({
       where: {
         OR: [
@@ -32,6 +31,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const { vendor_code, vendor_name } = body;
 
@@ -83,6 +83,7 @@ export async function PUT(request: Request) {
   }
 
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const { vendor_name } = body;
 
@@ -120,6 +121,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     // Safety check: Is used in projects?
     const usageCount = await prisma.projects.count({
       where: {

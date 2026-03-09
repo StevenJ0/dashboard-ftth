@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
-
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const regional_id = searchParams.get('regional_id');

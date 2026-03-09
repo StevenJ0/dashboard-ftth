@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-
-export const dynamic = "force-dynamic";
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-import { JWT_SECRET } from '@/lib/auth/config';
-import { userService } from '@/lib/prisma/service';
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -18,7 +16,13 @@ export async function GET() {
   }
 
   try {
-    const { payload } = await jwtVerify(token.value, JWT_SECRET);
+    // 1. Ambil Secret Key DI DALAM fungsi agar Vercel tidak rewel saat build
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+    const { payload } = await jwtVerify(token.value, secret);
     
     if (!payload.id) {
         return NextResponse.json(
@@ -26,6 +30,9 @@ export async function GET() {
             { status: 401 }
         );
     }
+
+    // 2. KUNCI: Dynamic import untuk Prisma service (Disembunyikan dari Build Vercel)
+    const { userService } = await import('@/lib/prisma/service');
 
     // @ts-ignore: payload.id is unknown but we know it's there from login
     const user = await userService.getById(Number(payload.id));

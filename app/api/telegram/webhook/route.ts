@@ -1,12 +1,12 @@
   import { NextRequest, NextResponse } from "next/server";
 
   export const dynamic = "force-dynamic";
-  import { prisma } from "@/lib/prisma/prisma";
   import { generateProjectMessage } from "@/lib/telegram/formatter";
 
   export async function POST(req: NextRequest) {
     console.log("Webhook hit");
     try {
+      const { prisma } = await import("@/lib/prisma/prisma");
       const body = await req.json();
 
       // 1. Validation: Request body must contain message

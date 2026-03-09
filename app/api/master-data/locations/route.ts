@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
 import { Prisma } from '@prisma/client';
 
 // GET: List Locations (Paginated & Filtered)
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -65,6 +65,7 @@ export async function GET(request: Request) {
 // POST: Create Location
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { witel_id, sub_district, port_location } = await request.json();
     if (!witel_id || !sub_district) return NextResponse.json({ error: 'Witel ID and Sub District required' }, { status: 400 });
     
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
 // PUT: Update Location
 export async function PUT(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { id, witel_id, sub_district, port_location } = await request.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
@@ -106,6 +108,7 @@ export async function PUT(request: Request) {
 // DELETE: Safe Delete Location
 export async function DELETE(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id') || '');
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });

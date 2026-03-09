@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
 import { Prisma } from '@prisma/client';
 
 // GET: Read Projects with Pagination (Project-Level)
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');

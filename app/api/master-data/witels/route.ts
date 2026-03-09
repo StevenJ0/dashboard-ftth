@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
-
 // GET: List Witels
 export async function GET() {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const witels = await prisma.dim_witels.findMany({
       include: {
         dim_regionals: true,
@@ -24,6 +23,7 @@ export async function GET() {
 // POST: Create Witel
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { witel_name, regional_id } = await request.json();
     if (!witel_name || !regional_id) return NextResponse.json({ error: 'Name and Regional ID required' }, { status: 400 });
     
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 // PUT: Update Witel
 export async function PUT(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { id, witel_name, regional_id } = await request.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
@@ -61,6 +62,7 @@ export async function PUT(request: Request) {
 // DELETE: Safe Delete Witel
 export async function DELETE(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id') || '');
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });

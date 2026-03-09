@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import { prisma } from '@/lib/prisma/prisma'; 
-import { otpService, userService } from '@/lib/prisma/service';
 import { telegramService } from '@/lib/telegram/service';
 
 export async function POST(req: Request) {
   try {
+    const { otpService, userService } = await import('@/lib/prisma/service');
     const { phoneNumber } = await req.json();
 
     if (!phoneNumber) {

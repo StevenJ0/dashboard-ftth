@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
 import * as XLSX from 'xlsx';
 
 // --- TYPE DEFINITIONS ---
@@ -71,6 +70,7 @@ const parseDate = (val: any): Date | null => {
 
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const formData = await request.formData();
     const file = formData.get('file') as File;
 

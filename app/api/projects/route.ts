@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
-import { prisma } from '@/lib/prisma/prisma';
 import { Prisma } from '@prisma/client';
 import { sendTelegramNotification } from '@/lib/telegram/service';
 import { generateProjectMessage } from '@/lib/telegram/formatter';
@@ -14,6 +13,7 @@ const formatCurrency = (amount: number | null) => {
 
 // Helper: Get or Create Location (Refactored for Normalized Schema)
 const getOrCreateLocation = async (witel_id: number | null, sub_district: string | null, port_location: string | null) => {
+  const { prisma } = await import('@/lib/prisma/prisma');
   if (!witel_id && !sub_district && !port_location) return null;
   
   // Normalize: Trim string, treat empty string as null
@@ -45,6 +45,7 @@ const getOrCreateLocation = async (witel_id: number | null, sub_district: string
 
 // Helper: Get or Create Plant
 const getOrCreatePlant = async (plant_code: string | null) => {
+  const { prisma } = await import('@/lib/prisma/prisma');
   if (!plant_code) return null;
 
   const existing = await prisma.dim_plants.findUnique({ where: { plant_code } });
@@ -56,6 +57,7 @@ const getOrCreatePlant = async (plant_code: string | null) => {
 
 // Helper: Get or Create Vendor
 const getOrCreateVendor = async (vendor_name: string | null) => {
+  const { prisma } = await import('@/lib/prisma/prisma');
   if (!vendor_name) return null;
 
   // Try to find by Name first
@@ -83,6 +85,7 @@ const getOrCreateVendor = async (vendor_name: string | null) => {
 // GET: Read All Data (with Pagination & Search)
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -224,6 +227,7 @@ export async function GET(request: Request) {
 // POST: Create New Data
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const {
       wbs_id, project_name, 
@@ -316,6 +320,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   console.log("PUT Request");
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const {
       id, wbs_id, project_name, 
@@ -462,6 +467,7 @@ export async function PUT(request: Request) {
 // PATCH: Quick Update Status
 export async function PATCH(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const { id, status_tomps, progress_percent } = body;
 
@@ -554,6 +560,7 @@ export async function PATCH(request: Request) {
 // DELETE: Delete Data
 export async function DELETE(request: Request) {
   try {
+    const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
