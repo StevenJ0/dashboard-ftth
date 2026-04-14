@@ -97,6 +97,7 @@ export async function GET(request: Request) {
     const whereClause: Prisma.project_itemsWhereInput = search
       ? {
           OR: [
+            { short_text: { contains: search, mode: 'insensitive' } },
             { wbs_id: { contains: search, mode: 'insensitive' } },
             {
               projects: {
@@ -239,17 +240,30 @@ export async function POST(request: Request) {
       pr_date, po_date, delivery_date, gr_date, gr_amount, ir_amount
     } = body;
 
+    // --- Validasi Input Wajib ---
     if (!wbs_id) return NextResponse.json({ error: 'WBS ID is required' }, { status: 400 });
+    if (!short_text || String(short_text).trim() === '') {
+      return NextResponse.json({ error: 'ID Project (Short Text) wajib diisi' }, { status: 400 });
+    }
+
+    // --- Cek Duplikasi Primary Key (short_text) ---
+    const existingItem = await prisma.project_items.findUnique({
+      where: { short_text: String(short_text).trim() },
+    });
+    if (existingItem) {
+      return NextResponse.json(
+        { error: `ID Project '${short_text}' sudah terdaftar. Gunakan ID yang berbeda.` },
+        { status: 400 }
+      );
+    }
 
     // 1. Handle Dimensions
-    // Parse IDs if they come as strings
     const parsedWitelId = witel_id ? parseInt(witel_id) : null;
     const parsedProgramId = program_id ? parseInt(program_id) : null;
     
     const locationId = await getOrCreateLocation(parsedWitelId, sub_district, port_location);
     const validPlantCode = await getOrCreatePlant(plant_code);
     
-    // Vendor Logic: Use Code if provided, else name
     let validVendorCode = null;
     if (vendor_code) {
        validVendorCode = vendor_code;
@@ -260,7 +274,6 @@ export async function POST(request: Request) {
     // 2. Upsert Project (Header ONLY)
     const projectData = {
       project_name,
-      // REMOVED: location_id, plant_code, vendor_code, program_id
       contract_number,
       contract_date: contract_date ? new Date(contract_date) : null,
       identification_project,
@@ -284,20 +297,17 @@ export async function POST(request: Request) {
     const newItem = await prisma.project_items.create({
       data: {
         wbs_id,
+        short_text: String(short_text).trim(), // Primary Key
         pr_number,
         po_number,
-        
-        // MOVED HERE:
         location_id: locationId,
         plant_code: validPlantCode,
         vendor_code: validVendorCode,
         program_id: parsedProgramId,
-
         pr_amount: pr_amount ? new Prisma.Decimal(pr_amount) : null,
         po_amount: po_amount ? new Prisma.Decimal(po_amount) : null,
         gr_amount: gr_amount ? new Prisma.Decimal(gr_amount) : null,
         ir_amount: ir_amount ? new Prisma.Decimal(ir_amount) : null,
-        short_text,
         status_lapangan,
         status_tomps_stage: status_tomps,
         progress_percent: progress_percent ? parseFloat(progress_percent) : 0,
@@ -308,7 +318,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(newItem);
+    return NextResponse.json(newItem, { status: 201 });
 
   } catch (error) {
     console.error('Error creating data:', error);
@@ -318,25 +328,25 @@ export async function POST(request: Request) {
 
 // PUT: Update Data (Full Item Update)
 export async function PUT(request: Request) {
-  console.log("PUT Request");
   try {
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const {
-      id, wbs_id, project_name, 
+      short_text, wbs_id, project_name, 
       regional_id, witel_id, sub_district, port_location,
       plant_code, vendor_name, vendor_code,
       program_id,
       contract_number, contract_date, identification_project, project_type,
-      pr_number, po_number, pr_amount, po_amount, short_text, status_lapangan, status_tomps, progress_percent,
+      pr_number, po_number, pr_amount, po_amount, status_lapangan, status_tomps, progress_percent,
       pr_date, po_date, delivery_date, gr_date, gr_amount, ir_amount
     } = body;
 
-    if (!id) return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+    // short_text adalah Primary Key — wajib ada untuk update
+    if (!short_text) return NextResponse.json({ error: 'ID Project (short_text) is required for update' }, { status: 400 });
 
     // 0. Fetch Existing Data (for Notification Logic)
     const currentItem = await prisma.project_items.findUnique({
-      where: { id },
+      where: { short_text },
       select: { progress_percent: true, status_tomps_stage: true }
     });
 
@@ -344,7 +354,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    // 1. Prepare Dimensions (if changing)
+    // 1. Prepare Dimensions
     const parsedWitelId = witel_id ? parseInt(witel_id) : null;
     const parsedProgramId = program_id ? parseInt(program_id) : null;
     const locationId = await getOrCreateLocation(parsedWitelId, sub_district, port_location);
@@ -357,26 +367,21 @@ export async function PUT(request: Request) {
        validVendorCode = await getOrCreateVendor(vendor_name);
     }
 
-    // 2. Update Project Items (With Dimensions)
+    // 2. Update Project Item (where: short_text = Primary Key)
     await prisma.project_items.update({
-      where: { id },
+      where: { short_text },  // ← Gunakan short_text sebagai identifier
       data: {
         pr_number,
         po_number,
-        
-        // Update Dimensions on Item
-        location_id: locationId ?? undefined, // Use explicit undefined to skip if null (or handle null reset?) 
-                                            // Actually getOrCreateLocation returns null if inputs are null.
-                                            // If fields are missing in body, they are undefined.
+        // short_text TIDAK dimasukkan ke data — tidak boleh mengubah Primary Key
+        location_id: locationId ?? undefined,
         plant_code: validPlantCode ?? undefined,
         vendor_code: validVendorCode ?? undefined,
         program_id: parsedProgramId ?? undefined,
-
         pr_amount: pr_amount ? new Prisma.Decimal(pr_amount) : null,
         po_amount: po_amount ? new Prisma.Decimal(po_amount) : null,
         gr_amount: gr_amount ? new Prisma.Decimal(gr_amount) : null,
         ir_amount: ir_amount ? new Prisma.Decimal(ir_amount) : null,
-        short_text,
         status_lapangan,
         status_tomps_stage: status_tomps, 
         progress_percent: progress_percent ? parseFloat(progress_percent) : undefined,
@@ -393,7 +398,6 @@ export async function PUT(request: Request) {
           where: { wbs_id }, 
           data: {
             project_name,
-            // Header only fields
             contract_number,
             contract_date: contract_date ? new Date(contract_date) : null,
             identification_project,
@@ -407,20 +411,17 @@ export async function PUT(request: Request) {
       const wasCompleted = (currentItem.progress_percent === 100) || 
                            ["GO LIVE", "CLOSE", "BAST"].some(s => (currentItem.status_tomps_stage || "").toUpperCase().includes(s));
 
-      // Determine New State (Use body value if present, else fallback to current db value)
       const newProgress = progress_percent ? parseFloat(progress_percent) : (currentItem.progress_percent || 0);
       const newStatus = status_tomps ? status_tomps.toUpperCase() : (currentItem.status_tomps_stage || "").toUpperCase();
 
       const isNowCompleted = (newProgress === 100) || ["GO LIVE", "CLOSE", "BAST"].some(s => newStatus.includes(s));
-      
       const shouldNotify = !wasCompleted && isNowCompleted;
 
       if (shouldNotify) {
-        console.log("🔔 Status Changed to Completed > Triggering Telegram for ID:", id);
+        console.log("🔔 Status Changed to Completed > Triggering Telegram for short_text:", short_text);
 
-        // Fetch Full Data for Message using Correct Relations
         const fullData = await prisma.project_items.findUnique({
-          where: { id },
+          where: { short_text },
           include: {
              dim_locations: {
                include: { 
@@ -431,23 +432,12 @@ export async function PUT(request: Request) {
              },
              dim_vendors: true,
              dim_plants: true,
-             projects: true // Include header for name/contract
+             projects: true
           }
         });
 
         if (fullData && fullData.projects) {
-          // Flatten data structure for message generator if needed, 
-          // or rely on generator handling nested structure. 
-          // The current `generateProjectMessage` likely expects `project` to have dimensions.
-          // I might need to mock/reshape it or update the generator.
-          // For now, let's pass it as is, but beware `generateProjectMessage` might fail if it looks for `project.dim_vendors`.
-          
-          // Let's assume we need to pass a composite object or rely on the fact that `fullData` HAS the dimensions now.
-          const message = generateProjectMessage(fullData.projects, fullData); 
-          // Note: `generateProjectMessage` signature is (project, item).
-          // If it reads dimensions from `project`, it will fail.
-          // I can't check `formatter` right now without reading it. 
-          // But fixing the DATA SAVE is the priority.
+          const message = generateProjectMessage(fullData.projects, fullData);
           await sendTelegramNotification(message);
         }
       }
@@ -469,13 +459,13 @@ export async function PATCH(request: Request) {
   try {
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
-    const { id, status_tomps, progress_percent } = body;
+    const { short_text, status_tomps, progress_percent } = body;
 
-    if (!id) return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+    if (!short_text) return NextResponse.json({ error: 'ID Project (short_text) is required' }, { status: 400 });
 
     // 1. Fetch Existing Data (for Notification Logic)
     const currentItem = await prisma.project_items.findUnique({
-      where: { id },
+      where: { short_text: String(short_text).trim() },
       select: { progress_percent: true, status_tomps_stage: true }
     });
 
@@ -488,23 +478,17 @@ export async function PATCH(request: Request) {
     if (status_tomps !== undefined) updateData.status_tomps_stage = status_tomps;
     if (progress_percent !== undefined) updateData.progress_percent = parseFloat(progress_percent);
 
-    console.log("update Data : " + updateData.progress_percent)  
-
     // 3. Update Status in DB
     const updatedItem = await prisma.project_items.update({
-      where: { id },
+      where: { short_text: String(short_text).trim() },
       data: updateData,
     });
 
     try {
       // 4. Conditional Notification Logic
       // Check if it WAS already completed
-      console.log("current progress : " + currentItem.progress_percent)
-      console.log("current status : " + currentItem.status_tomps_stage)
       const wasCompleted = (currentItem.progress_percent === 100) || 
                            ["GO LIVE", "CLOSED", "BAST", "OC", "QC"].some(s => (currentItem.status_tomps_stage || "").toUpperCase().includes(s));
-
-      console.log("was Completed : " + wasCompleted)
 
       // Check if it IS NOW completed
       const newProgress = updatedItem.progress_percent || 0;
@@ -513,14 +497,11 @@ export async function PATCH(request: Request) {
       const isNowCompleted = (newProgress === 100) || ["GO LIVE", "CLOSED", "BAST", "OC", "QC"].some(s => newStatus.includes(s));
       
       const shouldNotify = !wasCompleted && isNowCompleted;
-      console.log("should Notify : " , shouldNotify)
 
       if (shouldNotify) {
-        console.log("🔔 Quick Update: Project Completed > Sending Telegram for ID:", id);
-
         // Fetch Full Data for Message
         const fullData = await prisma.project_items.findUnique({
-          where: { id },
+          where: { short_text: String(short_text).trim() },
           include: {
              dim_locations: {
                include: { 
@@ -539,10 +520,8 @@ export async function PATCH(request: Request) {
           const message = generateProjectMessage(fullData.projects, fullData);
           await sendTelegramNotification(message);
         } else {
-             console.warn("⚠️ Full Data not found for ID:", id);
+             console.error("⚠️ Full Data not found for notification ID:", short_text);
         }
-      } else {
-        console.log(`ℹ️ Notification Skipped. WasCompleted: ${wasCompleted}, IsNowCompleted: ${isNowCompleted}`);
       }
 
     } catch (telegramError) {
@@ -562,33 +541,35 @@ export async function DELETE(request: Request) {
   try {
     const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    // Gunakan short_text (Primary Key) sebagai identifier delete
+    const shortText = searchParams.get('short_text');
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    if (!shortText) {
+      return NextResponse.json({ error: 'short_text (ID Project) is required' }, { status: 400 });
     }
 
-    const itemId = parseInt(id);
-
-    // Get item to know WBS before deleting
+    // 1. Get item untuk mengetahui WBS sebelum delete
     const item = await prisma.project_items.findUnique({
-      where: { id: itemId },
+      where: { short_text: shortText },
       select: { wbs_id: true }
     });
 
-    // 1. Delete Item
+    if (!item) {
+      return NextResponse.json({ error: 'Item tidak ditemukan' }, { status: 404 });
+    }
+
+    // 2. Delete Item berdasarkan short_text
     await prisma.project_items.delete({
-      where: { id: itemId },
+      where: { short_text: shortText },
     });
 
-    // 2. Check if WBS has other items
-    if (item && item.wbs_id) {
+    // 3. Jika tidak ada item tersisa pada project induk, hapus juga header-nya
+    if (item.wbs_id) {
       const remainingItems = await prisma.project_items.count({
         where: { wbs_id: item.wbs_id },
       });
 
       if (remainingItems === 0) {
-        // Optional: Delete Project Header if no items left
         await prisma.projects.delete({
           where: { wbs_id: item.wbs_id },
         });

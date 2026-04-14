@@ -140,10 +140,10 @@ export async function getDashboardData(): Promise<DashboardData> {
   `;
 
   const uniqueWbsRaw = await prisma.$queryRaw`
-    SELECT DISTINCT pi.wbs_id
+    SELECT DISTINCT pi.short_text
     FROM project_items pi
-    WHERE pi.wbs_id IS NOT NULL AND pi.wbs_id != ''
-    ORDER BY pi.wbs_id;
+    WHERE pi.short_text IS NOT NULL AND pi.short_text != ''
+    ORDER BY pi.short_text;
   `;
 
   // 7. Table Data (All projects for filtering/rendering)
@@ -215,8 +215,9 @@ export async function getDashboardData(): Promise<DashboardData> {
       po_value: Number(w.po_value),
     })),
     tableData: projects.map((p) => ({
-      id: p.wbs_id ?? "",
-      name: p.short_text ?? p.projects?.project_name ?? "-",
+      id: p.short_text ?? "",         // ID Project sesungguhnya (short_text)
+      short_text: p.short_text ?? "", // Alias eksplisit
+      name: p.projects?.project_name ?? "-",
       // UPDATED MAPPING: Access dimensions from item 'p'
       witel: p.dim_locations?.dim_witels?.witel_name ?? "-",
       vendor: p.dim_vendors?.vendor_name ?? "-",
@@ -250,7 +251,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         .map((s: any) => s.sub_district)
         .filter((name: string) => name && name.trim() !== ""),
       wbs: (uniqueWbsRaw as any[])
-        .map((w: any) => w.wbs_id || w.wbs)
+        .map((w: any) => w.short_text)
         .filter((id: string) => id && id.trim() !== ""),
     },
   };

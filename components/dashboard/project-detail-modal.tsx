@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Calendar, DollarSign, MapPin, Briefcase, FileText } from 'lucide-react';
+import { X, Calendar, DollarSign, MapPin, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ProjectDetailModalProps {
@@ -52,6 +52,8 @@ export default function ProjectDetailModal({ item, onClose }: ProjectDetailModal
                     <h4 className="text-sm font-bold uppercase text-slate-500">General Information</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <DetailItem label="ID Project" value={item.short_text} />
+                    <DetailItem label="WBS ID" value={item.wbs_id} />
                     <DetailItem label="Regional" value={item.regional} />
                     <DetailItem label="Witel" value={item.witel} />
                     <DetailItem label="Sub-District" value={item.sub_district} />
@@ -79,17 +81,8 @@ export default function ProjectDetailModal({ item, onClose }: ProjectDetailModal
                 </div>
             </section>
 
-             {/* Description & Status */}
-             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                     <div className="flex items-center gap-2 mb-3 pb-1 border-b border-slate-100">
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        <h4 className="text-sm font-bold uppercase text-slate-500">Description</h4>
-                    </div>
-                    <p className="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-100 min-h-[100px]">
-                        {item.short_text || <span className="text-slate-400 italic">No description provided.</span>}
-                    </p>
-                </div>
+             {/* Status */}
+             <section className="grid grid-cols-1 gap-6">
                 <div>
                      <div className="flex items-center gap-2 mb-3 pb-1 border-b border-slate-100">
                         <MapPin className="w-4 h-4 text-slate-500" />

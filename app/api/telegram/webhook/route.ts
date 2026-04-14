@@ -1,10 +1,9 @@
-  import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
   export const dynamic = "force-dynamic";
   import { generateProjectMessage } from "@/lib/telegram/formatter";
 
   export async function POST(req: NextRequest) {
-    console.log("Webhook hit");
     try {
       const { prisma } = await import("@/lib/prisma/prisma");
       const body = await req.json();
@@ -130,51 +129,42 @@
   Bot ini membantu Anda memonitor status project secara Real-time.
 
   <b>Command List:</b>
-  /cek [WBS ID] - Cek progress project (Contoh: <code>/cek Q-24001</code>).
+  /cek [id-project] - Cek progress project (Contoh: <code>/cek LOP-FBB-001</code>).
   /help - Tampilkan pesan ini lagi.`;
 
         await replyMessage(chatId, welcomeMessage);
       } else if (text.startsWith("/cek")) {
         const parts = text.trim().split(/\s+/); // Split by whitespace to handle multiple spaces
         
-        // Check format: /cek [WBS_ID]
+        // Check format: /cek [id-project]
         if (parts.length < 2) {
-          await replyMessage(chatId, "Format salah. Gunakan: <code>/cek [WBS_ID]</code>");
+          await replyMessage(chatId, "Format salah. Gunakan: <code>/cek [id-project]</code>");
           return NextResponse.json({ ok: true });
         }
 
-        const wbsId = parts[1];
+        const idProject = parts[1];
 
-        // 3. Database Query
-        const project = await prisma.projects.findUnique({
-          where: { wbs_id: wbsId },
+        // 3. Database Query — cari berdasarkan short_text (Primary Key sesungguhnya)
+        const projectItem = await prisma.project_items.findUnique({
+          where: { short_text: idProject },
           include: {
-            project_items: {
-              orderBy: {
-                updated_at: "desc",
-              },
-              take: 1,
+            projects: true,
+            dim_vendors: true,
+            dim_locations: {
               include: {
-                dim_vendors: true,
-                dim_locations: {
-                  include: {
-                    dim_witels: {
-                        include: { dim_regionals: true }
-                    },
-                  },
+                dim_witels: {
+                  include: { dim_regionals: true }
                 },
-              }
+              },
             },
           },
         });
 
-        if (!project) {
-          await replyMessage(chatId, "Data not found");
+        if (!projectItem) {
+          await replyMessage(chatId, `❌ Data dengan ID Project <code>${idProject}</code> tidak ditemukan.`);
         } else {
           // Format Response
-          const latestItem = project.project_items?.[0] || null;
-          const message = generateProjectMessage(project, latestItem);
-
+          const message = generateProjectMessage(projectItem.projects, projectItem);
           await replyMessage(chatId, message);
         }
       }

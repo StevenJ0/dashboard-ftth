@@ -108,22 +108,36 @@ export const itemService = {
     });
   },
 
-  async getById(id: number) {
+  // Pencarian berdasarkan Primary Key sesungguhnya (short_text = ID Project)
+  async getByShortText(shortText: string) {
     return await prisma.project_items.findUnique({
-      where: { id },
+      where: { short_text: shortText },
+      include: {
+        projects: true,
+        dim_locations: {
+          include: {
+            dim_witels: {
+              include: { dim_regionals: true },
+            },
+          },
+        },
+        dim_vendors: true,
+        dim_plants: true,
+        dim_programs: true,
+      },
     });
   },
 
-  async update(id: number, data: Prisma.project_itemsUpdateInput) {
+  async update(shortText: string, data: Prisma.project_itemsUpdateInput) {
     return await prisma.project_items.update({
-      where: { id },
+      where: { short_text: shortText },
       data,
     });
   },
 
-  async delete(id: number) {
+  async delete(shortText: string) {
     return await prisma.project_items.delete({
-      where: { id },
+      where: { short_text: shortText },
     });
   },
 };

@@ -61,9 +61,9 @@ model otp_logs {
 }
 
 model project_items {
-  id                   Int            @id @default(autoincrement())
+  id                   Int            @default(autoincrement())
   wbs_id               String?        @db.VarChar(50)
-  short_text           String?
+  short_text           String         @id
   pr_number            String?        @db.VarChar(50)
   po_number            String?        @db.VarChar(50)
   pr_date              DateTime?      @db.Date

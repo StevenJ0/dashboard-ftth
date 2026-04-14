@@ -46,7 +46,7 @@ const projectSchema = z.object({
   delivery_date: z.string().optional().nullable(),
   gr_date: z.string().optional().nullable(),
 
-  short_text: z.string().optional(),
+  short_text: z.string().min(1, "ID Project (Short Text) wajib diisi"),
   status_lapangan: z.string().optional(),
   status_tomps: z.string().optional(),
   
@@ -198,13 +198,14 @@ export default function ProjectForm({ initialData, onClose, onSuccess }: Project
   const onSubmit: SubmitHandler<ProjectFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
-       const url = '/api/projects'; // Pastikan route ini handle POST & PUT
-       // Logic: Kalau ada initialData.id, kita pakai PUT (Update), kalau tidak ada pakai POST (Create)
-       const method = initialData?.id ? 'PUT' : 'POST'; 
+       const url = '/api/projects';
+       // Gunakan short_text sebagai identifier utama (Primary Key sesungguhnya)
+       // Kalau ada initialData.short_text → mode Edit (PUT), kalau tidak → mode Create (POST)
+       const method = initialData?.short_text ? 'PUT' : 'POST';
        
-       // Prepare Payload (Ensure numbers are strictly numbers)
+       // Prepare Payload — TIDAK menyertakan id integer lagi
        const payload = {
-           id: initialData?.id, 
+           // short_text dikirim sebagai identifier untuk PUT
            ...data,
            // Explicit conversions to prevent string issues
            regional_id: data.regional_id != null ? Number(data.regional_id) : null,
@@ -214,7 +215,7 @@ export default function ProjectForm({ initialData, onClose, onSuccess }: Project
            po_amount: data.po_amount != null ? Number(data.po_amount) : null,
            gr_amount: data.gr_amount != null ? Number(data.gr_amount) : null,
            ir_amount: data.ir_amount != null ? Number(data.ir_amount) : null,
-           progress_percent: Number(data.progress_percent || 0), // Fix Task 3 bug
+           progress_percent: Number(data.progress_percent || 0),
        };
 
        const res = await fetch(url, {
@@ -357,9 +358,23 @@ export default function ProjectForm({ initialData, onClose, onSuccess }: Project
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                     {/* ID Project (short_text) — PRIMARY KEY, required saat create, lock saat edit */}
                      <div className="md:col-span-2">
-                         <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Short Text / Description</label>
-                         <input {...register('short_text')} className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500" placeholder="Description..." />
+                         <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+                           ID Project <span className="text-red-500">*</span>
+                           {!!initialData && (
+                             <span className="ml-2 text-[10px] font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 normal-case">
+                               🔒 Tidak dapat diubah (Primary Key)
+                             </span>
+                           )}
+                         </label>
+                         <input
+                           {...register('short_text')}
+                           disabled={!!initialData}
+                           className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed font-mono"
+                           placeholder="Contoh: LOP-FBB-001"
+                         />
+                         {errors.short_text && <p className="text-xs text-red-500 mt-1">{errors.short_text.message}</p>}
                      </div>
                      <div className="md:col-span-1">
                          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Project Type</label>
@@ -367,7 +382,7 @@ export default function ProjectForm({ initialData, onClose, onSuccess }: Project
                      </div>
                      <div className="md:col-span-1">
                          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Identification Project</label>
-                         <input {...register('identification_project')} className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500" placeholder="ID Project..." />
+                         <input {...register('identification_project')} className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500" placeholder="ID Program..." />
                      </div>
                  </div>
 

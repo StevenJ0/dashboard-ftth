@@ -20,9 +20,10 @@ export const formatDate = (date: Date | string | null | undefined): string => {
 };
 
 export const generateProjectMessage = (project: any, item: any): string => {
-  const pName = project?.project_name || item?.short_text || "-";
+  const pName = project?.project_name || "-";
   const wbs = project?.wbs_id || "-";
-  const idProject = project?.identification_project || "-";
+  const idProject = item?.short_text || project?.identification_project || "-";
+  
   
   const regional = item?.dim_locations?.dim_witels?.dim_regionals?.regional_name || "-";
   const witel = item?.dim_locations?.dim_witels?.witel_name || "-";

@@ -1,18 +1,18 @@
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
 export async function sendTelegramNotification(message: string) {
-  console.log("BOT_TOKEN", BOT_TOKEN);
-  console.log("CHAT_ID", CHAT_ID);
   if (!BOT_TOKEN || !CHAT_ID) {
-    console.warn("⚠️ Telegram Notification Skipped: Token or Chat ID not found in .env");
+    if (process.env.NODE_ENV !== 'production') {
+       console.error("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
+    }
     return;
   }
 
   try {
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    
-    const response = await fetch(url, {
+    const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,8 +27,6 @@ export async function sendTelegramNotification(message: string) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("❌ Telegram Error:", errorData);
-    } else {
-      console.log("✅ Telegram Notification Sent!");
     }
   } catch (error) {
     console.error("❌ Failed to send Telegram notification:", error);

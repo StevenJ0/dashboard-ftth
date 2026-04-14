@@ -86,7 +86,7 @@ function sortData<T>(data: T[], sortConfig: SortConfig, getNestedValue: (item: T
 // --- QUICK EDIT COMPONENT ---
 interface QuickEditProps {
   item: ProjectData;
-  onUpdate: (id: number, newStage: string, newPercent: number) => Promise<void>;
+  onUpdate: (shortText: string, newStage: string, newPercent: number) => Promise<void>;
 }
 
 const QuickEditCell = ({ item, onUpdate }: QuickEditProps) => {
@@ -119,9 +119,15 @@ const QuickEditCell = ({ item, onUpdate }: QuickEditProps) => {
   }, [isOpen, item]);
 
   const handleSave = async () => {
-    await onUpdate(item.id, stage, percent);
+    // 1. Tambahkan penjaga pintu di sini
+    if (!item.short_text) {
+      return; 
+    }
+
+    // 2. Sekarang TypeScript tahu pasti kalau short_text itu ada (string)
+    await onUpdate(item.short_text, stage, percent);
     setIsOpen(false);
-  };
+};
 
   const getColor = (p: number) => {
     if (p >= 100) return 'bg-emerald-500';
@@ -359,14 +365,15 @@ export default function MasterDataView() {
       setIsDetailOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+  const handleDelete = async (shortText: string) => {
+    if (!confirm(`Yakin ingin menghapus item '${shortText}'?`)) return;
     try {
-      const res = await fetch(`/api/projects?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/projects?short_text=${encodeURIComponent(shortText)}`, { method: 'DELETE' });
       if (res.ok) {
         mutate();
       } else {
-        alert('Failed to delete');
+        const errData = await res.json();
+        alert(errData.error || 'Failed to delete');
       }
     } catch (err) {
       console.error(err);
@@ -374,12 +381,12 @@ export default function MasterDataView() {
     }
   };
 
-  const handleQuickUpdate = async (id: number, newStage: string, newPercent: number) => {
+  const handleQuickUpdate = async (shortText: string, newStage: string, newPercent: number) => {
       try {
           const res = await fetch('/api/projects', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id, status_tomps: newStage, progress_percent: newPercent })
+              body: JSON.stringify({ short_text: shortText, status_tomps: newStage, progress_percent: newPercent })
           });
           if (!res.ok) throw new Error('API Error');
           mutate();
@@ -499,7 +506,7 @@ export default function MasterDataView() {
               <input
                 type="text"
                 className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
-                placeholder="Search by WBS ID or Project Name..."
+                placeholder="Search by ID Project or Project Name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -516,7 +523,7 @@ export default function MasterDataView() {
                 <table className="w-full text-left text-sm">
                   <thead className="sticky top-0 z-20 bg-slate-100 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
                     <tr>
-                      <SortableHeader label="WBS ID" sortKey="wbs_id" currentSort={sortConfig} onSort={handleSort} className="min-w-[120px]" />
+                      <SortableHeader label="ID Project" sortKey="short_text" currentSort={sortConfig} onSort={handleSort} className="min-w-[120px]" />
                       <SortableHeader label="Project Name" sortKey="project_name" currentSort={sortConfig} onSort={handleSort} className="min-w-[200px]" />
                       <SortableHeader label="Regional" sortKey="regional" currentSort={sortConfig} onSort={handleSort} />
                       <SortableHeader label="Witel" sortKey="witel" currentSort={sortConfig} onSort={handleSort} />
@@ -533,7 +540,7 @@ export default function MasterDataView() {
                         key={item.id} 
                         className="hover:bg-red-50 transition-colors"
                       >
-                        <td className="px-4 py-3 font-medium text-slate-900 sticky left-0 bg-inherit z-1">{item.wbs_id}</td>
+                        <td className="px-4 py-3 font-medium text-slate-900 sticky left-0 bg-inherit z-1">{item.short_text}</td>
                         <td className="px-4 py-3 text-slate-600 line-clamp-2 max-w-[300px]" title={item.project_name || ''}>{item.project_name}</td>
                         <td className="px-4 py-3 text-slate-600">{item.regional}</td>
                         <td className="px-4 py-3 text-slate-600">{item.witel}</td>
@@ -576,7 +583,7 @@ export default function MasterDataView() {
                               <Pencil className="h-4 w-4" />
                             </button>
                             <button 
-                              onClick={() => handleDelete(item.id)}
+                              onClick={() => item.short_text && handleDelete(item.short_text)}
                               className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600 transition-colors"
                               title="Delete"
                             >

@@ -30,7 +30,7 @@ export default function ProjectTable({ data }: { data: ProjectRow[] }) {
         <table className="w-full text-sm text-left">
           <thead className="bg-slate-50 text-slate-500 font-semibold uppercase text-xs border-b border-slate-200">
             <tr>
-              <th className="px-6 py-4">WBS ID & Project</th>
+              <th className="px-6 py-4">ID Project & Project</th>
               <th className="px-6 py-4">Witel</th>
               <th className="px-6 py-4">Vendor</th>
               <th className="px-6 py-4">Nilai PO</th>
