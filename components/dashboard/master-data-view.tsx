@@ -402,7 +402,16 @@ export default function MasterDataView() {
     const result = await res.json();
     
     if (result.data) {
-      const worksheet = XLSX.utils.json_to_sheet(result.data);
+      // Mapping Excel untuk menghapus legacy 'id' dan jadikan short_text mandatory header di awal kolom
+      const exportData = result.data.map((item: any) => {
+        const { id, short_text, ...rest } = item;
+        return {
+          'SHORT TEXT (*)': short_text,
+          ...rest
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Data');
       XLSX.writeFile(workbook, 'Master_Data_Export.xlsx');

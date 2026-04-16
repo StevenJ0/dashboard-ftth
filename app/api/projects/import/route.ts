@@ -304,22 +304,23 @@ export async function POST(request: Request) {
             const poNum = getVal('PO NUMBER') ? String(getVal('PO NUMBER')).trim() : null;
             const shortTxt = getVal('SHORT TEXT') ? String(getVal('SHORT TEXT')).trim() : null;
 
-            const existingItem = await prisma.project_items.findFirst({
-                where: {
-                    wbs_id: sWbsId,
-                    pr_number: prNum || undefined,
-                    po_number: poNum || undefined,
-                    short_text: shortTxt || undefined
-                }
+            // 🛡️ 1. GUARD CLAUSE (Wajib agar TypeScript tahu ini BUKAN null)
+            if (!shortTxt) {
+                console.error(`Baris dilewati: WBS ${sWbsId} tidak memiliki SHORT TEXT.`);
+                failCount++;
+                continue; // Lanjut ke baris Excel berikutnya
+            }
+
+            const existingItem = await prisma.project_items.findUnique({
+                where: { short_text: shortTxt }
             });
 
-            const itemData = {
+            const itemDataUpdate = {
                 wbs_id: sWbsId,
                 pr_number: prNum,
                 po_number: poNum,
-                short_text: shortTxt,
                 
-                // DATA INJECTION: Location, Vendor, Plant, Program
+                // DATA INJECTION
                 location_id: locId, 
                 vendor_code: fkVendor,
                 plant_code: fkPlant,
@@ -344,9 +345,17 @@ export async function POST(request: Request) {
             };
 
             if (existingItem) {
-                await prisma.project_items.update({ where: { id: existingItem.id }, data: itemData });
+                await prisma.project_items.update({ 
+                    where: { short_text: shortTxt }, 
+                    data: itemDataUpdate 
+                });
             } else {
-                await prisma.project_items.create({ data: itemData });
+                await prisma.project_items.create({ 
+                    data: {
+                        ...itemDataUpdate,
+                        short_text: shortTxt 
+                    } 
+                });
             }
 
             successCount++;
