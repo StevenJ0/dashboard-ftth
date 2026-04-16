@@ -368,7 +368,6 @@ export default function MasterDataView() {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
 
   const isSearching = isLoading || search !== debouncedSearch;
-  const showSkeleton = isLoading && (!sortedItems || sortedItems.length === 0) && search === debouncedSearch;
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: null });
@@ -404,6 +403,8 @@ export default function MasterDataView() {
     sortData(items || [], sortConfig, getNestedValue), 
     [items, sortConfig]
   );
+
+  const showSkeleton = isLoading && (!sortedItems || sortedItems.length === 0) && search === debouncedSearch;
 
   const handleAddNew = () => {
     setSelectedProject(null);
