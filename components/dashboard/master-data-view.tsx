@@ -10,6 +10,58 @@ import { motion } from 'framer-motion';
 import ProjectForm from './project-form';
 import ProjectDetailModal from './project-detail-modal';
 
+// Skeleton Loader Component
+const TableSkeleton = () => (
+  <div className="w-full flex flex-col gap-4 p-4 animate-in fade-in duration-300">
+    {/* Desktop View Skeleton */}
+    <div className="hidden md:flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+        <div className="h-4 w-28 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-48 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-24 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-32 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-16 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-36 bg-slate-200 animate-pulse rounded"></div>
+        <div className="h-4 w-20 bg-slate-200 animate-pulse rounded"></div>
+      </div>
+      {/* Rows */}
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex justify-between items-center py-2">
+          <div className="h-4 w-24 bg-slate-100 animate-pulse rounded"></div>
+          <div className="h-4 w-40 bg-slate-100 animate-pulse rounded"></div>
+          <div className="h-4 w-24 bg-slate-100 animate-pulse rounded"></div>
+          <div className="h-4 w-32 bg-slate-100 animate-pulse rounded"></div>
+          <div className="h-4 w-20 bg-slate-100 animate-pulse rounded"></div>
+          <div className="h-6 w-20 bg-slate-200/60 animate-pulse rounded-full"></div>
+          <div className="flex flex-col gap-1 w-24 items-end">
+             <div className="h-4 w-8 bg-slate-100 animate-pulse rounded"></div>
+             <div className="h-2 w-full bg-slate-100 animate-pulse rounded-full"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Mobile Card View Skeleton */}
+    <div className="flex md:hidden flex-col gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="border border-slate-100 bg-white rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div className="h-5 w-32 bg-slate-200 animate-pulse rounded"></div>
+            <div className="h-6 w-16 bg-slate-200/60 animate-pulse rounded-full"></div>
+          </div>
+          <div className="h-4 w-3/4 bg-slate-100 animate-pulse rounded"></div>
+          <div className="flex gap-3">
+             <div className="h-3 w-20 bg-slate-100 animate-pulse rounded"></div>
+             <div className="h-3 w-24 bg-slate-100 animate-pulse rounded"></div>
+          </div>
+          <div className="mt-2 h-2 w-full bg-slate-100 animate-pulse rounded-full"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 // Sorting types
 type SortDirection = 'asc' | 'desc' | null;
 type SortConfig = {
@@ -315,6 +367,9 @@ export default function MasterDataView() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
 
+  const isSearching = isLoading || search !== debouncedSearch;
+  const showSkeleton = isLoading && (!sortedItems || sortedItems.length === 0) && search === debouncedSearch;
+
   // Sorting State
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: null });
 
@@ -511,7 +566,13 @@ export default function MasterDataView() {
 
             {/* Search Bar */}
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              {isSearching ? (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
+                  </div>
+              ) : (
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              )}
               <input
                 type="text"
                 className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
@@ -523,13 +584,11 @@ export default function MasterDataView() {
 
             {/* Data Table */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="relative max-h-[65vh] overflow-x-auto">
-                {isLoading && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-                    <Loading />
-                  </div>
-                )}
-                <table className="w-full text-left text-sm">
+              <div className="relative overflow-x-auto min-h-[400px]">
+                {showSkeleton ? (
+                  <TableSkeleton />
+                ) : (
+                <table className={`w-full text-left text-sm transition-opacity duration-300 ${isSearching ? 'opacity-50' : 'opacity-100'}`}>
                   <thead className="sticky top-0 z-20 bg-slate-100 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
                     <tr>
                       <SortableHeader label="ID Project" sortKey="short_text" currentSort={sortConfig} onSort={handleSort} className="min-w-[120px]" />
@@ -615,6 +674,7 @@ export default function MasterDataView() {
                     )}
                   </tbody>
                 </table>
+                )}
               </div>
 
               {/* Pagination Controls */}

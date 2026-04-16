@@ -22,13 +22,13 @@ import { NextRequest, NextResponse } from "next/server";
       const lowerText = text ? text.toLowerCase().trim() : "";
 
       if (lowerText.startsWith("/verify")) {
-        const parts = text!.trim().split(/\s+/);
-        if (parts.length < 2) {
+        const args = text!.split(' ').slice(1).join(' ').trim();
+        if (!args) {
           await replyMessage(chatId, "Format salah. Gunakan: <code>/verify [Nomor_HP]</code>");
           return NextResponse.json({ ok: true });
         }
 
-        const phoneNumber = parts[1];
+        const phoneNumber = args;
         const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
         // Logic 08 format support
@@ -134,15 +134,15 @@ import { NextRequest, NextResponse } from "next/server";
 
         await replyMessage(chatId, welcomeMessage);
       } else if (text.startsWith("/cek")) {
-        const parts = text.trim().split(/\s+/); // Split by whitespace to handle multiple spaces
+        const args = text.split(' ').slice(1).join(' ').trim();
         
         // Check format: /cek [id-project]
-        if (parts.length < 2) {
+        if (!args) {
           await replyMessage(chatId, "Format salah. Gunakan: <code>/cek [id-project]</code>");
           return NextResponse.json({ ok: true });
         }
 
-        const idProject = parts[1];
+        const idProject = args;
 
         // 3. Database Query — cari berdasarkan short_text (Primary Key sesungguhnya)
         const projectItem = await prisma.project_items.findUnique({
