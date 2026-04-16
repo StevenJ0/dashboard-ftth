@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = "force-dynamic";
 import { Prisma } from '@prisma/client';
-import { sendTelegramNotification } from '@/lib/telegram/service';
-import { generateProjectMessage } from '@/lib/telegram/formatter';
+import { sendTelegramMessage } from '@/lib/telegram';
 
 // Helper to format currency (unused in API but kept for reference)
 const formatCurrency = (amount: number | null) => {
@@ -318,8 +317,14 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(newItem, { status: 201 });
+    try {
+      const timeStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      await sendTelegramMessage(`🚀 *PROYEK BARU TERDAFTAR*\n\n*ID Project:* \`${short_text}\`\n*Nama Proyek:* ${project_name || 'N/A'}\n*Waktu:* ${timeStr}`);
+    } catch (telegramError) {
+      console.error('⚠️ Telegram Error on CREATE:', telegramError);
+    }
 
+    return NextResponse.json(newItem, { status: 201 });
   } catch (error) {
     console.error('Error creating data:', error);
     return NextResponse.json({ error: 'Failed to create data' }, { status: 500 });
@@ -407,43 +412,22 @@ export async function PUT(request: Request) {
     }
 
     try {
-      // 4. Conditional Notification Logic
-      const wasCompleted = (currentItem.progress_percent === 100) || 
-                           ["GO LIVE", "CLOSE", "BAST"].some(s => (currentItem.status_tomps_stage || "").toUpperCase().includes(s));
+      const timeStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      const oldProgress = currentItem.progress_percent || 0;
+      const newProgress = progress_percent ? parseFloat(progress_percent) : oldProgress;
+      
+      const oldStatus = currentItem.status_tomps_stage || 'N/A';
+      const newStatus = status_tomps || oldStatus;
 
-      const newProgress = progress_percent ? parseFloat(progress_percent) : (currentItem.progress_percent || 0);
-      const newStatus = status_tomps ? status_tomps.toUpperCase() : (currentItem.status_tomps_stage || "").toUpperCase();
-
-      const isNowCompleted = (newProgress === 100) || ["GO LIVE", "CLOSE", "BAST"].some(s => newStatus.includes(s));
-      const shouldNotify = !wasCompleted && isNowCompleted;
-
-      if (shouldNotify) {
-        console.log("🔔 Status Changed to Completed > Triggering Telegram for short_text:", short_text);
-
-        const fullData = await prisma.project_items.findUnique({
-          where: { short_text },
-          include: {
-             dim_locations: {
-               include: { 
-                 dim_witels: {
-                     include: { dim_regionals: true }
-                 } 
-               }
-             },
-             dim_vendors: true,
-             dim_plants: true,
-             projects: true
-          }
-        });
-
-        if (fullData && fullData.projects) {
-          const message = generateProjectMessage(fullData.projects, fullData);
-          await sendTelegramNotification(message);
-        }
+      if (oldStatus !== newStatus) {
+         await sendTelegramMessage(`🔄 *PERUBAHAN STATUS*\n\n*ID Project:* \`${short_text}\`\n*Status Lama:* ${oldStatus}\n*Status Baru:* ${newStatus}\n*Waktu:* ${timeStr}`);
       }
-
+      
+      if (oldProgress !== newProgress) {
+         await sendTelegramMessage(`📊 *UPDATE PROGRES*\n\n*ID Project:* \`${short_text}\`\n*Progres Lama:* ${oldProgress}%\n*Progres Baru:* ${newProgress}%\n*Waktu:* ${timeStr}`);
+      }
     } catch (telegramError) {
-      console.error('⚠️ Telegram Error (Data saved but notification failed):', telegramError);
+      console.error('⚠️ Telegram Error on UPDATE:', telegramError);
     }
 
     return NextResponse.json({ message: 'Data updated successfully' });
@@ -485,47 +469,22 @@ export async function PATCH(request: Request) {
     });
 
     try {
-      // 4. Conditional Notification Logic
-      // Check if it WAS already completed
-      const wasCompleted = (currentItem.progress_percent === 100) || 
-                           ["GO LIVE", "CLOSED", "BAST", "OC", "QC"].some(s => (currentItem.status_tomps_stage || "").toUpperCase().includes(s));
-
-      // Check if it IS NOW completed
+      const timeStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      const oldProgress = currentItem.progress_percent || 0;
       const newProgress = updatedItem.progress_percent || 0;
-      const newStatus = (updatedItem.status_tomps_stage || "").toUpperCase();
-
-      const isNowCompleted = (newProgress === 100) || ["GO LIVE", "CLOSED", "BAST", "OC", "QC"].some(s => newStatus.includes(s));
       
-      const shouldNotify = !wasCompleted && isNowCompleted;
+      const oldStatus = currentItem.status_tomps_stage || 'N/A';
+      const newStatus = updatedItem.status_tomps_stage || 'N/A';
 
-      if (shouldNotify) {
-        // Fetch Full Data for Message
-        const fullData = await prisma.project_items.findUnique({
-          where: { short_text: String(short_text).trim() },
-          include: {
-             dim_locations: {
-               include: { 
-                 dim_witels: {
-                     include: { dim_regionals: true }
-                 } 
-               }
-             },
-             dim_vendors: true,
-             dim_plants: true,
-             projects: true
-          }
-        });
-
-        if (fullData && fullData.projects) {
-          const message = generateProjectMessage(fullData.projects, fullData);
-          await sendTelegramNotification(message);
-        } else {
-             console.error("⚠️ Full Data not found for notification ID:", short_text);
-        }
+      if (oldStatus !== newStatus) {
+         await sendTelegramMessage(`🔄 *PERUBAHAN STATUS*\n\n*ID Project:* \`${short_text}\`\n*Status Lama:* ${oldStatus}\n*Status Baru:* ${newStatus}\n*Waktu:* ${timeStr}`);
       }
-
+      
+      if (oldProgress !== newProgress) {
+         await sendTelegramMessage(`📊 *UPDATE PROGRES*\n\n*ID Project:* \`${short_text}\`\n*Progres Lama:* ${oldProgress}%\n*Progres Baru:* ${newProgress}%\n*Waktu:* ${timeStr}`);
+      }
     } catch (telegramError) {
-      console.error('⚠️ Telegram Error (Data saved but notification failed):', telegramError);
+      console.error('⚠️ Telegram Error on PATCH:', telegramError);
     }
 
     return NextResponse.json({ message: 'Status updated successfully' });
@@ -574,6 +533,13 @@ export async function DELETE(request: Request) {
           where: { wbs_id: item.wbs_id },
         });
       }
+    }
+
+    try {
+      const timeStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      await sendTelegramMessage(`⚠️ *PERINGATAN*\n\nProyek dengan ID Project \`${shortText}\` telah dihapus dari sistem.\n*Waktu:* ${timeStr}`);
+    } catch (telegramError) {
+      console.error('⚠️ Telegram Error on DELETE:', telegramError);
     }
 
     return NextResponse.json({ message: 'Data deleted successfully' });
