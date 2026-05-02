@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     if (!user.is_verified || !user.telegram_id) {
       return NextResponse.json(
-        { success: false, message: "Akun Anda belum diverifikasi atau belum terhubung dengan Telegram. Silakan chat bot kami dengan format: /verify <NomorHP>" },
+        { success: false, message: "Akun Anda belum diverifikasi atau belum terhubung dengan Telegram. Silakan chat bot kami @ProjectTomps_bot dengan format: /verify <NomorHP>" },
         { status: 403 }
       );
     }

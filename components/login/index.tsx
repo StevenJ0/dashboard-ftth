@@ -1,5 +1,5 @@
 "use client" 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Phone, User, Lock, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,14 @@ const LoginView = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const savedPhone = localStorage.getItem('rememberedPhone');
+        if (savedPhone) {
+            setFormData(prev => ({ ...prev, phoneNumber: savedPhone }));
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -40,10 +48,16 @@ const LoginView = () => {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || 'Login gagal');
+                throw new Error(data.error || data.message || 'Login gagal');
             }
 
-            router.push('/dashboard/master-data'); 
+            if (rememberMe) {
+                localStorage.setItem('rememberedPhone', formData.phoneNumber);
+            } else {
+                localStorage.removeItem('rememberedPhone');
+            }
+
+            router.push('/dashboard'); 
             router.refresh(); 
         } catch (err: any) {
             setError(err.message);

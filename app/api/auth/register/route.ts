@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { 
-        message: 'Registrasi berhasil. Silakan verifikasi akun Anda melalui Bot Telegram sebelum login.',
+        message: 'Registrasi berhasil. Silakan verifikasi akun Anda melalui Bot Telegram @ProjectTomps_bot dengan format: /verify <NomorHP> sebelum login.',
         otpSent: false,
         phoneNumber: phoneNumber
       },
