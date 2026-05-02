@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getUserRole, isManager } from '@/lib/auth/role';
 
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
@@ -31,6 +32,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menambah data.' }, { status: 403 });
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const { vendor_code, vendor_name } = body;
@@ -72,6 +75,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const role = await getUserRole();
+  if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat mengubah data.' }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
 
@@ -110,6 +115,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const role = await getUserRole();
+  if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menghapus data.' }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
 

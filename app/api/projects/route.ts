@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = "force-dynamic";
 import { Prisma } from '@prisma/client';
 import { sendTelegramMessage } from '@/lib/telegram';
+import { getUserRole, isManager } from '@/lib/auth/role';
 
 // Helper to format currency (unused in API but kept for reference)
 const formatCurrency = (amount: number | null) => {
@@ -227,6 +228,11 @@ export async function GET(request: Request) {
 // POST: Create New Data
 export async function POST(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) {
+      return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menambah data.' }, { status: 403 });
+    }
+
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const {
@@ -334,6 +340,11 @@ export async function POST(request: Request) {
 // PUT: Update Data (Full Item Update)
 export async function PUT(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) {
+      return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat mengubah data.' }, { status: 403 });
+    }
+
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const {
@@ -441,6 +452,11 @@ export async function PUT(request: Request) {
 // PATCH: Quick Update Status
 export async function PATCH(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) {
+      return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat mengubah status.' }, { status: 403 });
+    }
+
     const { prisma } = await import('@/lib/prisma/prisma');
     const body = await request.json();
     const { short_text, status_tomps, progress_percent } = body;
@@ -498,6 +514,11 @@ export async function PATCH(request: Request) {
 // DELETE: Delete Data
 export async function DELETE(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) {
+      return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menghapus data.' }, { status: 403 });
+    }
+
     const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     // Gunakan short_text (Primary Key) sebagai identifier delete

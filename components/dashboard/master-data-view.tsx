@@ -340,7 +340,8 @@ const QuickEditCell = ({ item, onUpdate }: QuickEditProps) => {
   );
 };
 
-export default function MasterDataView() {
+export default function MasterDataView({ userRole }: { userRole: string }) {
+  const isManager = userRole === 'MANAGER';
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [search, setSearch] = useState('');
@@ -507,6 +508,7 @@ export default function MasterDataView() {
                 </button>
 
                 {/* Import Excel Button & Input */}
+                {isManager && (
                 <div className="relative">
                   <input
                     type="file"
@@ -554,7 +556,9 @@ export default function MasterDataView() {
                     Import Excel
                   </label>
                 </div>
+                )}
 
+                {isManager && (
                 <button
                   onClick={handleAddNew}
                   className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
@@ -562,6 +566,7 @@ export default function MasterDataView() {
                   <Plus className="mr-2 h-4 w-4" />
                   Add New
                 </button>
+                )}
               </div>
             </div>
 
@@ -632,7 +637,19 @@ export default function MasterDataView() {
                         </td>
                         
                         <td className="px-4 py-3 text-left">
-                          <QuickEditCell item={item} onUpdate={handleQuickUpdate} />
+                          {isManager ? (
+                            <QuickEditCell item={item} onUpdate={handleQuickUpdate} />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold w-8 text-right text-slate-900">{item.progress_percent}%</span>
+                              <div className="h-2.5 w-24 bg-slate-200 rounded-full overflow-hidden border border-slate-100">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${item.progress_percent >= 100 ? 'bg-emerald-500' : item.progress_percent >= 76 ? 'bg-blue-500' : item.progress_percent >= 26 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                                  style={{ width: `${item.progress_percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </td>
 
                         <td className="px-4 py-3 text-right sticky right-0 bg-white z-10 shadow-[-5px_0px_5px_-5px_rgba(0,0,0,0.1)]">
@@ -644,6 +661,8 @@ export default function MasterDataView() {
                             >
                               <Eye className="h-4 w-4" />
                             </button>
+                            {isManager && (
+                            <>
                             <button 
                               onClick={() => handleEdit(item)}
                               className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors"
@@ -658,6 +677,8 @@ export default function MasterDataView() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
+                            </>
+                            )}
                           </div>
                         </td>
                       </tr>

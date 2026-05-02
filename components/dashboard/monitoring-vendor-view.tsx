@@ -84,7 +84,8 @@ interface Vendor {
   vendor_name: string;
 }
 
-export default function MonitoringVendorView() {
+export default function MonitoringVendorView({ userRole }: { userRole: string }) {
+  const isManager = userRole === 'MANAGER';
   const [search, setSearch] = useState('');
   const { data: vendors, error, mutate, isLoading } = useSWR<Vendor[]>(
     `/api/master-data/vendors?search=${search}`,
@@ -212,6 +213,7 @@ export default function MonitoringVendorView() {
           <h1 className="text-2xl font-bold text-slate-900">Monitoring Vendor</h1>
           <p className="text-slate-500 text-sm">Manage vendor master data used in projects.</p>
         </div>
+        {isManager && (
         <button
           onClick={() => handleOpenModal()}
           className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors shadow-sm"
@@ -219,6 +221,7 @@ export default function MonitoringVendorView() {
           <Plus className="mr-2 h-4 w-4" />
           Add New Vendor
         </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -241,7 +244,7 @@ export default function MonitoringVendorView() {
               <tr>
                 <SortableHeader label="Vendor Code" sortKey="vendor_code" currentSort={sortConfig} onSort={handleSort} />
                 <SortableHeader label="Vendor Name" sortKey="vendor_name" currentSort={sortConfig} onSort={handleSort} />
-                <th className="px-6 py-3 border-b border-slate-200 text-right">Actions</th>
+                {isManager && <th className="px-6 py-3 border-b border-slate-200 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -270,6 +273,7 @@ export default function MonitoringVendorView() {
                   <tr key={vendor.vendor_code} className="hover:bg-red-50 transition-colors">
                     <td className="px-6 py-3 font-medium text-slate-900">{vendor.vendor_code}</td>
                     <td className="px-6 py-3 text-slate-600">{vendor.vendor_name}</td>
+                    {isManager && (
                     <td className="px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -288,6 +292,7 @@ export default function MonitoringVendorView() {
                         </button>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}

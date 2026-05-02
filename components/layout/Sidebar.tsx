@@ -178,7 +178,7 @@ export default function Sidebar({ isOpen = false, onClose, user }: SidebarProps)
                     {userProfile?.full_name || 'User'}
                   </p>
                   <p className="text-xs text-slate-500 truncate">
-                    {userProfile?.role || 'Guest'}
+                    {userProfile?.role === 'MANAGER' ? 'Manager' : 'Staff'}
                   </p>
                 </>
               )}

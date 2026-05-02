@@ -99,7 +99,8 @@ const Tabs = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (t
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function MonitoringWitelView() {
+export default function MonitoringWitelView({ userRole }: { userRole: string }) {
+  const isManager = userRole === 'MANAGER';
 
     const [activeTab, setActiveTab] = useState('regionals');
   
@@ -296,6 +297,7 @@ export default function MonitoringWitelView() {
           <p className="text-sm text-slate-500 mt-1">Manage Master Data for Regionals, Witels, and Locations</p>
         </div>
         <div>
+             {isManager && (
              <button 
                 onClick={openAddModal}
                 className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
@@ -303,6 +305,7 @@ export default function MonitoringWitelView() {
                  <Plus className="mr-2 h-4 w-4" />
                  Add New {activeTab.slice(0,-1)}
              </button>
+             )}
         </div>
       </div>
 
@@ -356,7 +359,7 @@ export default function MonitoringWitelView() {
                           <SortableHeader label="ID" sortKey="id" currentSort={sortConfig} onSort={handleSort} className="min-w-[80px]" />
                           <SortableHeader label="Regional Name" sortKey="regional_name" currentSort={sortConfig} onSort={handleSort} className="w-full" />
                           <SortableHeader label="Total Witels" sortKey="_count.dim_witels" currentSort={sortConfig} onSort={handleSort} className="text-center" />
-                          <th className="px-6 py-3 text-right">Actions</th>
+                          {isManager && <th className="px-6 py-3 text-right">Actions</th>}
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -369,12 +372,14 @@ export default function MonitoringWitelView() {
                                       {r._count?.dim_witels || 0}
                                   </span>
                               </td>
+                              {isManager && (
                               <td className="px-6 py-3 text-right">
                                   <div className="flex justify-end gap-2">
                                       <button onClick={() => openEditModal(r)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 rounded transition-colors" title="Edit"><Pencil className="h-4 w-4"/></button>
                                       <button onClick={() => handleDelete(r.id)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600 rounded transition-colors" title="Delete"><Trash2 className="h-4 w-4"/></button>
                                   </div>
                               </td>
+                              )}
                           </tr>
                       ))}
                       {sortedRegionals.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-slate-500">No data found</td></tr>}
@@ -390,7 +395,7 @@ export default function MonitoringWitelView() {
                           <SortableHeader label="Witel Name" sortKey="witel_name" currentSort={sortConfig} onSort={handleSort} className="w-full" />
                           <SortableHeader label="Regional Parent" sortKey="dim_regionals.regional_name" currentSort={sortConfig} onSort={handleSort} />
                           <SortableHeader label="Locations" sortKey="_count.dim_locations" currentSort={sortConfig} onSort={handleSort} className="text-center" />
-                          <th className="px-6 py-3 text-right">Actions</th>
+                          {isManager && <th className="px-6 py-3 text-right">Actions</th>}
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -404,12 +409,14 @@ export default function MonitoringWitelView() {
                                       {w._count?.dim_locations || 0}
                                   </span>
                               </td>
+                              {isManager && (
                               <td className="px-6 py-3 text-right">
                                   <div className="flex justify-end gap-2">
                                       <button onClick={() => openEditModal(w)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 rounded transition-colors" title="Edit"><Pencil className="h-4 w-4"/></button>
                                       <button onClick={() => handleDelete(w.id)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600 rounded transition-colors" title="Delete"><Trash2 className="h-4 w-4"/></button>
                                   </div>
                               </td>
+                              )}
                           </tr>
                       ))}
                        {sortedWitels.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-slate-500">No data found</td></tr>}
@@ -428,7 +435,7 @@ export default function MonitoringWitelView() {
                           <SortableHeader label="Witel" sortKey="dim_witels.witel_name" currentSort={sortConfig} onSort={handleSort} />
                           <SortableHeader label="Regional" sortKey="dim_witels.dim_regionals.regional_name" currentSort={sortConfig} onSort={handleSort} />
                           <SortableHeader label="Projects" sortKey="_count.project_items" currentSort={sortConfig} onSort={handleSort} className="text-center" />
-                          <th className="px-6 py-3 text-right">Actions</th>
+                          {isManager && <th className="px-6 py-3 text-right">Actions</th>}
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -448,12 +455,14 @@ export default function MonitoringWitelView() {
                                       <span className="text-slate-400 text-xs">-</span>
                                   )}
                               </td>
+                              {isManager && (
                               <td className="px-6 py-3 text-right">
                                   <div className="flex justify-end gap-2">
                                       <button onClick={() => openEditModal(l)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 rounded transition-colors" title="Edit"><Pencil className="h-4 w-4"/></button>
                                       <button onClick={() => handleDelete(l.id)} className="p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600 rounded transition-colors" title="Delete"><Trash2 className="h-4 w-4"/></button>
                                   </div>
                               </td>
+                              )}
                           </tr>
                       ))}
                        {sortedLocations.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-500">No data found</td></tr>}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getUserRole, isManager } from '@/lib/auth/role';
 
 export const dynamic = "force-dynamic";
 import * as XLSX from 'xlsx';
@@ -70,6 +71,11 @@ const parseDate = (val: any): Date | null => {
 
 export async function POST(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) {
+      return NextResponse.json({ success: false, error: 'Akses ditolak. Hanya Manager yang dapat import data.' }, { status: 403 });
+    }
+
     const { prisma } = await import('@/lib/prisma/prisma');
     const formData = await request.formData();
     const file = formData.get('file') as File;

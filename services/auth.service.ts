@@ -47,7 +47,7 @@ export const authService = {
         full_name: fullName,
         phone_number: phoneNumber,
         password_hash: passwordHash,
-        role: 'USER',
+        role: 'STAFF',
         is_verified: false,
       });
 

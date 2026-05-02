@@ -192,7 +192,7 @@ export default function ProfileView() {
                     <div className="flex items-center gap-2 text-xs text-slate-600">
                       <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></div>
                       <span className="font-medium">
-                        {user?.role?.toLowerCase() === 'admin' ? 'Full system access granted' : 'Standard user permissions'}
+                        {['admin', 'manager'].includes(user?.role?.toLowerCase() || '') ? 'Full system access granted' : 'Standard user permissions'}
                       </span>
                     </div>
                   </div>

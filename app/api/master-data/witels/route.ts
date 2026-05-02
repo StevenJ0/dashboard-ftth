@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getUserRole, isManager } from '@/lib/auth/role';
 
 export const dynamic = "force-dynamic";
 // GET: List Witels
@@ -23,6 +24,8 @@ export async function GET() {
 // POST: Create Witel
 export async function POST(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menambah data.' }, { status: 403 });
     const { prisma } = await import('@/lib/prisma/prisma');
     const { witel_name, regional_id } = await request.json();
     if (!witel_name || !regional_id) return NextResponse.json({ error: 'Name and Regional ID required' }, { status: 400 });
@@ -42,6 +45,8 @@ export async function POST(request: Request) {
 // PUT: Update Witel
 export async function PUT(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat mengubah data.' }, { status: 403 });
     const { prisma } = await import('@/lib/prisma/prisma');
     const { id, witel_name, regional_id } = await request.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
@@ -62,6 +67,8 @@ export async function PUT(request: Request) {
 // DELETE: Safe Delete Witel
 export async function DELETE(request: Request) {
   try {
+    const role = await getUserRole();
+    if (!isManager(role)) return NextResponse.json({ error: 'Akses ditolak. Hanya Manager yang dapat menghapus data.' }, { status: 403 });
     const { prisma } = await import('@/lib/prisma/prisma');
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get('id') || '');
