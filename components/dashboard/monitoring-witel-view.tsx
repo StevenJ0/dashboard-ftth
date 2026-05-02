@@ -293,7 +293,7 @@ export default function MonitoringWitelView({ userRole }: { userRole: string }) 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Monitoring Witel</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Witel Data</h2>
           <p className="text-sm text-slate-500 mt-1">Manage Master Data for Regionals, Witels, and Locations</p>
         </div>
         <div>

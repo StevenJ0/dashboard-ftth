@@ -57,9 +57,9 @@ const navItemVariants: Variants = {
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Activity, label: "Monitoring Data", href: "/dashboard/master-data" },
-  { icon: Map, label: "Monitoring Witel", href: "/dashboard/monitoring-witel" },
-  { icon: Users, label: "Monitoring Vendor", href: "/dashboard/monitoring-vendor" },
+  { icon: Activity, label: "Project Data", href: "/dashboard/master-data" },
+  { icon: Map, label: "Witel Data", href: "/dashboard/monitoring-witel" },
+  { icon: Users, label: "Vendor Data", href: "/dashboard/monitoring-vendor" },
 ];
 
 

@@ -4,7 +4,7 @@ import { getUserSession } from '@/lib/auth/session';
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: 'Monitoring Vendor | Dashboard',
+  title: 'Vendor Data | Dashboard',
 };
 
 export default async function MonitoringVendorPage() {

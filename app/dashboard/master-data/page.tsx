@@ -5,8 +5,8 @@ import { getUserSession } from '@/lib/auth/session';
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: 'Master Data Dashboard | FTTH Project',
-  description: 'Manage Project Data, WBS, PO/PR, and Dimensions.',
+  title: 'Project Data | FTTH Dashboard',
+  description: 'Manage master data for software projects.',
 };
 
 export default async function MasterDataPage() {

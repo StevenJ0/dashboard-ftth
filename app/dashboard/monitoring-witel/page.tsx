@@ -5,7 +5,7 @@ import { getUserSession } from '@/lib/auth/session';
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: 'Monitoring Witel | FTTH Project',
+  title: 'Witel Data | FTTH Dashboard',
   description: 'Manage Regionals, Witels, and Locations.',
 };
 
