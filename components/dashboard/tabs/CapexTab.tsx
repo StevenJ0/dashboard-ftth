@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { DashboardData } from "@/types/dashboard";
 import { formatMoney } from "./formatUtils";
 import CapexFilters, { CapexFilterState } from "./CapexFilters";
@@ -44,7 +44,13 @@ const getProgramColor = (program: string, index: number) => {
   return COLORS[index % COLORS.length];
 };
 
-export default function CapexTab({ data }: { data: DashboardData }) {
+interface CapexTabProps {
+  data: DashboardData;
+  /** Called whenever the filtered rows change — used by parent for PDF export */
+  onFilteredDataChange?: (rows: any[]) => void;
+}
+
+export default function CapexTab({ data, onFilteredDataChange }: CapexTabProps) {
   // --- STATE FILTERS ---
   const [filters, setFilters] = useState<CapexFilterState>({
     distrik: [],
@@ -122,6 +128,11 @@ export default function CapexTab({ data }: { data: DashboardData }) {
       return true;
     });
   }, [data.tableData, filters]);
+
+  // Lift filtered data to parent for PDF export
+  useEffect(() => {
+    onFilteredDataChange?.(filteredTableData);
+  }, [filteredTableData, onFilteredDataChange]);
 
   // --- 3. RE-CALCULATE AGGREGATED DATA ---
   const aggregatedData = useMemo(() => {

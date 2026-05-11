@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashboardData } from "@/types/dashboard";
 import { formatMoney } from "./formatUtils";
 import {
@@ -15,7 +15,13 @@ import {
 import WaspangFilters, { FilterState } from "./WaspangFilters";
 
 
-export default function WaspangTab({ data }: { data: DashboardData }) {
+interface WaspangTabProps {
+  data: DashboardData;
+  /** Called whenever the filtered rows change — used by parent for PDF export */
+  onFilteredDataChange?: (rows: any[]) => void;
+}
+
+export default function WaspangTab({ data, onFilteredDataChange }: WaspangTabProps) {
   const [filters, setFilters] = useState<FilterState>({
     typeCapex: [],
     statusSap: [],
@@ -156,6 +162,11 @@ export default function WaspangTab({ data }: { data: DashboardData }) {
       return true;
     });
   }, [filters, data.tableData]);
+
+  // Lift filtered data to parent for PDF export
+  useEffect(() => {
+    onFilteredDataChange?.(filteredTableData);
+  }, [filteredTableData, onFilteredDataChange]);
 
 
   // Hitung filtered stats untuk scorecards
