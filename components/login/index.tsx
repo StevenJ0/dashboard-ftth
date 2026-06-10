@@ -31,7 +31,6 @@ const LoginView = () => {
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        console.log(formData);
         e.preventDefault();
         setIsLoading(true);
         setError('');
@@ -57,11 +56,21 @@ const LoginView = () => {
                 localStorage.removeItem('rememberedPhone');
             }
 
-            router.push('/dashboard'); 
-            router.refresh(); 
+            // PERBAIKAN #3a: Hapus router.refresh() yang sebelumnya ada di sini.
+            // router.refresh() menyebabkan dua request sekaligus ke server (double
+            // request), berpotensi menimbulkan race condition di internal Next.js
+            // router. router.push() sudah cukup — route tujuan (/dashboard) akan
+            // dirender fresh dari server secara otomatis.
+            router.push('/dashboard');
+
+            // PERBAIKAN #3b: Sengaja TIDAK memanggil setIsLoading(false) di sini.
+            // Biarkan tombol tetap menampilkan spinner "Signing in..." selama
+            // transisi navigasi berlangsung (sampai loading.tsx muncul di layar).
+            // Ini memberi visual feedback yang konsisten kepada user.
+            // setIsLoading(false) tetap dipanggil di blok catch jika login gagal.
         } catch (err: any) {
             setError(err.message);
-        } finally {
+            // Hanya reset loading state jika terjadi error — bukan saat sukses.
             setIsLoading(false);
         }
     };
