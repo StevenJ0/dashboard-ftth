@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma/prisma';
-import { userService, otpService, genericDBService } from '@/lib/prisma/service';
+import { userService, genericDBService } from '@/lib/prisma/service';
 import { telegramService } from '@/lib/telegram/service';
 import bcrypt from 'bcrypt';
 import { SignJWT, jwtVerify } from 'jose';
@@ -55,8 +55,8 @@ export const authService = {
     }
 
     // Proses Lanjutan (Common Flow)
-    // Registration now requires users to verify via Telegram Bot directly.
-    // No explicit OTP is sent during registration.
+    // Registration requires users to verify via Telegram Bot directly.
+    // User must send /verify <PhoneNumber> to the bot to activate their account.
 
     return {
       success: true,
@@ -64,58 +64,4 @@ export const authService = {
       message: 'User registered. Please verify your phone number via Telegram Bot to continue.',
     };
   },
-
-  /**
-   * Verify OTP & Login (Support Remember Me)
-   */
-  async verifyOtp(phoneNumber: string, otpCode: string, rememberMe: boolean = false) {
-    // 1. Cari data valid
-    const otpLog = await otpService.findValidLog(phoneNumber, otpCode);
-
-    if (!otpLog) {
-       throw new Error("Invalid or Expired OTP");
-    }
-
-    // 2. Mark as Is Used
-    await otpService.markAsUsed(otpLog.id);
-
-    // 3. Update User Verified 
-    // Need user info for JWT
-    let userId = otpLog.user_id;
-    let user; 
-    
-    if (userId) {
-        user = await userService.getById(userId);
-        await genericDBService.updateData('users', userId, { is_verified: true });
-    } else {
-        user = await userService.getByPhone(phoneNumber);
-        if (user) {
-            userId = user.id;
-            await genericDBService.updateData('users', user.id, { is_verified: true });
-        }
-    }
-
-    if (!user || !userId) {
-        throw new Error("User associated with OTP not found");
-    }
-
-    // 4. Generate Session Token (JWT)
-    const token = await new SignJWT({ 
-        id: user.id, 
-        name: user.full_name, 
-        role: user.role,
-        phone: user.phone_number
-    })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(rememberMe ? '7d' : '24h') // 7 hari jika remember me
-    .sign(JWT_SECRET);
-
-    // Return token and cookie config info
-    return {
-        success: true,
-        token,
-        cookieMaxAge: rememberMe ? 7 * 24 * 60 * 60 : undefined, // seconds (7 days) or undefined (session)
-        user: { id: user.id, name: user.full_name, role: user.role }
-    };
-  }
 };

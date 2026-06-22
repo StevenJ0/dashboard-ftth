@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { Eye, EyeOff, Phone, User, Lock, Check, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import OTPVerifyForm from '../auth/OTPVerifyForm';
 import { Modal } from '../ui/Modal';
 
 // Telkom Indonesia Brand Colors
@@ -21,7 +20,7 @@ const PASSWORD_RULES = [
   { id: 'uppercase', label: 'Minimal 1 huruf besar (A-Z)', regex: /[A-Z]/ },
   { id: 'lowercase', label: 'Minimal 1 huruf kecil (a-z)', regex: /[a-z]/ },
   { id: 'number', label: 'Minimal 1 angka (0-9)', regex: /[0-9]/ },
-  { id: 'special', label: 'Minimal 1 karakter spesial (!@#$%^&*)', regex: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/ },
+  { id: 'special', label: 'Minimal 1 karakter spesial (!@#$%^&*)', regex: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\\/`~;']/ },
 ];
 
 const RegisterView = () => {
@@ -102,10 +101,6 @@ const RegisterView = () => {
       isValid: passedRules === totalRules
     };
   }, [formData.password]);
-  
-  // OTP State
-  const [showOtp, setShowOtp] = useState(false);
-  const [registeredPhone, setRegisteredPhone] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -153,18 +148,13 @@ const RegisterView = () => {
         throw new Error(data.error || 'Terjadi kesalahan');
       }
 
-      // Success
-      if (data.otpSent) {
-        setRegisteredPhone(data.phoneNumber);
-        setShowOtp(true);
-      } else {
-        showModal(
-          'Registrasi Berhasil',
-          `Registrasi berhasil! Silakan buka Telegram dan chat bot @ProjectTomps_bot dengan format: /verify ${data.phoneNumber} untuk mengaktifkan akun.`,
-          'success',
-          () => router.push('/auth/login')
-        );
-      }
+      // Success — redirect to login after showing Telegram verification instructions
+      showModal(
+        'Registrasi Berhasil',
+        `Registrasi berhasil! Silakan buka Telegram dan chat bot @ProjectTomps_bot dengan format: /verify ${data.phoneNumber} untuk mengaktifkan akun.`,
+        'success',
+        () => router.push('/auth/login')
+      );
     } catch (err: any) {
       setError(err.message);
       showModal('Gagal', err.message, 'error');
@@ -172,26 +162,6 @@ const RegisterView = () => {
       setIsLoading(false);
     }
   };
-
-  const handleOtpSuccess = () => {
-    showModal(
-      'Verifikasi Berhasil',
-      'Verifikasi berhasil! Akun Anda telah aktif. Silakan login.',
-      'success',
-      () => router.push('/auth/login')
-    );
-  };
-
-  if (showOtp) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <OTPVerifyForm 
-          phoneNumber={registeredPhone} 
-          onSuccess={handleOtpSuccess}
-        />
-      </div>
-    );
-  }
 
   return (
     <div 
@@ -294,7 +264,7 @@ const RegisterView = () => {
                 />
               </div>
               <p className="text-xs mt-1.5 ml-1" style={{ color: "#6B7280" }}>
-                We'll send OTP to this number
+                Verifikasi akun dilakukan melalui Bot Telegram
               </p>
             </div>
 

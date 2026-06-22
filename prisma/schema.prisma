@@ -49,16 +49,7 @@ model dim_witels {
   dim_regionals dim_regionals   @relation(fields: [regional_id], references: [id], onDelete: Cascade)
 }
 
-model otp_logs {
-  id           Int       @id @default(autoincrement())
-  phone_number String?   @db.VarChar
-  otp_code     String?   @db.VarChar
-  expires_at   DateTime? @db.Timestamp(6)
-  is_used      Boolean?  @default(false)
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
-  user_id      Int?
-  users        users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-}
+
 
 model project_items {
   id                   Int            @default(autoincrement())
@@ -110,5 +101,5 @@ model users {
   created_at    DateTime?  @default(now()) @db.Timestamp(6)
   updated_at    DateTime?  @default(now()) @db.Timestamp(6)
   telegram_id   String?    @unique @db.VarChar(50)
-  otp_logs      otp_logs[]
+
 }
